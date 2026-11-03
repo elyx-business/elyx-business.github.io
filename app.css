@@ -1104,3 +1104,26 @@ ul.cv-detail { padding-left: 62px; }
 :root[data-theme="light"] .cv-pill { background: #eaf7ef; color: #1c8a52; border-color: #b7e0c6; }
 .taxq-row { display: flex; gap: 8px; margin: 8px 0 4px; }
 .taxq-row .taxq-in { flex: 1; min-width: 0; font-size: 16px; padding: 10px 12px; }
+
+/* «Утечки денег» на вкладке «Точки»: четыре места, где деньги уходят незаметно */
+.lk { border: 1px solid #5a2f2f; background: #1a1112; }
+.lk-head { margin-bottom: 10px; }
+.lk-sum { margin: 2px 0 4px; font-size: 34px; line-height: 1.1; font-weight: 800; color: #ef6b6b; font-family: var(--font-num, inherit); }
+.lk-sum.ok { font-size: 22px; color: #3ccf82; }
+.lk-list { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); }
+.lk-item + .lk-item { border-top: 1px solid var(--line); }
+.lk-item > summary { display: flex; align-items: center; gap: 12px; padding: 13px 14px; list-style: none; cursor: pointer; }
+.lk-item > summary::-webkit-details-marker { display: none; }
+.lk-item .h16-ico { width: 22px; height: 22px; color: var(--text-soft); flex: none; }
+.lk-item.bad .h16-ico { color: #ef6b6b; }
+.lk-item.warn .h16-ico { color: #e9c46a; }
+.lk-t { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.lk-t b { font-size: 15px; line-height: 1.25; }
+.lk-t small { font-size: 12.5px; color: var(--text-soft); line-height: 1.3; }
+.lk-pill { flex: none; font-weight: 700; font-size: 14px; padding: 6px 10px; border-radius: 10px; white-space: nowrap;
+  border: 1px solid #7a3636; color: #ef6b6b; background: #1f1314; }
+.lk-pill.ok { border-color: var(--line-strong); color: var(--text-soft); background: transparent; font-weight: 600; }
+.lk-detail { margin: 0; padding: 0 14px 4px 48px; font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+.lk-go { margin: 0; padding: 4px 14px 12px 48px; }
+:root[data-theme="light"] .lk { background: #fdf2f2; border-color: #eab8b8; }
+:root[data-theme="light"] .lk-pill { background: #fdeaea; color: #b23b3b; border-color: #eab8b8; }
