@@ -1,0 +1,21 @@
+points: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.5s
+points: https://overpass.private.coffee/api/interpreter FAIL TimeoutError The read operation timed out 120.8s
+points: https://maps.mail.ru/osm/tools/overpass/api/interpreter FAIL HTTPError HTTP Error 504: Gateway Time-out 1.0s
+points: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+points: https://overpass.private.coffee/api/interpreter FAIL TimeoutError The read operation timed out 120.3s
+points: https://maps.mail.ru/osm/tools/overpass/api/interpreter FAIL HTTPError HTTP Error 504: Gateway Time-out 1.1s
+points: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+points: https://overpass.private.coffee/api/interpreter 3709 elements 80.7s
+comp_named: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+comp_named: https://overpass.private.coffee/api/interpreter FAIL TimeoutError The read operation timed out 120.2s
+comp_named: https://maps.mail.ru/osm/tools/overpass/api/interpreter 740 elements 16.4s
+comp_r500: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+comp_r500: https://overpass.private.coffee/api/interpreter FAIL HTTPError HTTP Error 504: Gateway Timeout 104.1s
+comp_r500: https://maps.mail.ru/osm/tools/overpass/api/interpreter FAIL HTTPError HTTP Error 504: Gateway Timeout 52.7s
+comp_r500: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+comp_r500: https://overpass.private.coffee/api/interpreter 444 elements 79.8s
+flow_1: https://overpass-api.de/api/interpreter 392 elements 41.8s
+flow_2: https://overpass-api.de/api/interpreter 245 elements 32.7s
+flow_3: https://overpass-api.de/api/interpreter FAIL HTTPError HTTP Error 502: Bad Gateway 0.3s
+flow_3: https://overpass.private.coffee/api/interpreter 466 elements 107.8s
+flow_4: https://overpass-api.de/api/interpreter 225 elements 32.4s
