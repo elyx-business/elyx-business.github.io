@@ -16,7 +16,8 @@
     "nominatim.openstreetmap.org", "photon.komoot.io", "search-maps.yandex.ru", "static-maps.yandex.ru",
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.17-web";
+  const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.18-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -82,6 +83,9 @@
     let u;
     try { u = new URL(req.url); } catch { return J({ error: "неверный адрес" }); }
     if (u.protocol !== "https:" || !ALLOWED.includes(u.hostname)) return J({ error: "Адрес не разрешён: " + u.hostname });
+    // Налоговая не отвечает браузерам с чужих сайтов, а запрос здесь синхронный: ожидание её ответа замораживало
+    // весь сайт после ввода ИНН. Поэтому из браузера к ней не ходим вовсе: компания показывается по ИНН сразу.
+    if (NO_BROWSER.includes(u.hostname)) return J({ error: `Сервис ${u.hostname} не пускает запросы из браузера. Эта функция работает в приложении для Android.` });
     const x = new XMLHttpRequest();
     try {
       x.open(req.method || "GET", u.href, false);

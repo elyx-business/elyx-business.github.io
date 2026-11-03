@@ -1,6 +1,6 @@
 /* Elyx для iPhone: программа сохраняется на телефоне и открывается без интернета. Данные бизнеса здесь не хранятся —
    только файлы программы с этого сайта. Новая версия подхватывается при следующем открытии. */
-const CACHE = "elyx-2.9.18-80d2c56c9cea";
+const CACHE = "elyx-2.9.18-6c03b213cfb3";
 self.addEventListener("install", (e) => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "index.html", "app.js", "app.css", "style.css", "web_native.js", "py/pyodide.js"]))); });
 self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (e) => {
