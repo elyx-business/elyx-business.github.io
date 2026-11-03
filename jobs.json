@@ -1,0 +1,57 @@
+[
+ {
+  "id": "points",
+  "kind": "vector",
+  "lat": 55.75465,
+  "lon": 37.59965,
+  "half_w": 6989.77635125639,
+  "half_h": 3226.0506236567953,
+  "query": "[out:json][timeout:25][bbox:55.725670,37.488071,55.783630,37.711229];(way[\"highway\"~\"^(motorway|trunk|primary|secondary)$\"];way[\"natural\"=\"water\"];way[\"waterway\"=\"riverbank\"];way[\"waterway\"~\"^(river|canal)$\"];relation[\"natural\"=\"water\"];way[\"leisure\"~\"^(park)$\"];way[\"landuse\"~\"^(forest)$\"];relation[\"leisure\"=\"park\"];);out geom qt;"
+ },
+ {
+  "id": "comp_named",
+  "kind": "vector",
+  "lat": 55.7616,
+  "lon": 37.6094,
+  "half_w": 736,
+  "half_h": 441.59999999999997,
+  "query": "[out:json][timeout:25][bbox:55.757633,37.597649,55.765567,37.621151];(way[\"highway\"~\"^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|residential|unclassified|living_street|pedestrian)$\"];way[\"natural\"=\"water\"];way[\"waterway\"=\"riverbank\"];way[\"waterway\"~\"^(river|canal)$\"];relation[\"natural\"=\"water\"];way[\"leisure\"~\"^(park|garden)$\"];way[\"landuse\"~\"^(forest|grass|recreation_ground)$\"];relation[\"leisure\"=\"park\"];way[\"building\"];way[\"railway\"=\"rail\"][\"service\"!~\".\"];);out geom qt;"
+ },
+ {
+  "id": "comp_r500",
+  "kind": "vector",
+  "lat": 55.7616,
+  "lon": 37.6094,
+  "half_w": 560,
+  "half_h": 336.0,
+  "query": "[out:json][timeout:25][bbox:55.758582,37.600459,55.764618,37.618341];(way[\"highway\"~\"^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|residential|unclassified|living_street|pedestrian)$\"];way[\"natural\"=\"water\"];way[\"waterway\"=\"riverbank\"];way[\"waterway\"~\"^(river|canal)$\"];relation[\"natural\"=\"water\"];way[\"leisure\"~\"^(park|garden)$\"];way[\"landuse\"~\"^(forest|grass|recreation_ground)$\"];relation[\"leisure\"=\"park\"];way[\"building\"];way[\"railway\"=\"rail\"][\"service\"!~\".\"];);out geom qt;"
+ },
+ {
+  "id": "flow_1",
+  "kind": "flow",
+  "lat": 55.7616,
+  "lon": 37.6094,
+  "query": "[out:json][timeout:20][bbox:55.758905,37.603014,55.764295,37.615786];way[\"highway\"~\"^(pedestrian|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|trunk)$\"]->.g;.g out geom qt;(node[\"railway\"~\"^(subway_entrance|station|halt|tram_stop)$\"];node[\"station\"=\"subway\"];node[\"highway\"=\"bus_stop\"];node[\"public_transport\"=\"platform\"];nwr[\"office\"];nwr[\"shop\"];nwr[\"amenity\"~\"^(university|college|school|cafe|restaurant|fast_food|food_court|bar|pub|marketplace|cinema|theatre|arts_centre|nightclub|hospital|clinic|pharmacy|bank|post_office)$\"];nwr[\"tourism\"~\"^(attraction|museum|hotel)$\"];nwr[\"leisure\"=\"park\"];)->.p;.p out center qt;"
+ },
+ {
+  "id": "flow_2",
+  "kind": "flow",
+  "lat": 55.7668,
+  "lon": 37.5899,
+  "query": "[out:json][timeout:20][bbox:55.764105,37.583513,55.769495,37.596287];way[\"highway\"~\"^(pedestrian|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|trunk)$\"]->.g;.g out geom qt;(node[\"railway\"~\"^(subway_entrance|station|halt|tram_stop)$\"];node[\"station\"=\"subway\"];node[\"highway\"=\"bus_stop\"];node[\"public_transport\"=\"platform\"];nwr[\"office\"];nwr[\"shop\"];nwr[\"amenity\"~\"^(university|college|school|cafe|restaurant|fast_food|food_court|bar|pub|marketplace|cinema|theatre|arts_centre|nightclub|hospital|clinic|pharmacy|bank|post_office)$\"];nwr[\"tourism\"~\"^(attraction|museum|hotel)$\"];nwr[\"leisure\"=\"park\"];)->.p;.p out center qt;"
+ },
+ {
+  "id": "flow_3",
+  "kind": "flow",
+  "lat": 55.766,
+  "lon": 37.606,
+  "query": "[out:json][timeout:20][bbox:55.763305,37.599613,55.768695,37.612387];way[\"highway\"~\"^(pedestrian|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|trunk)$\"]->.g;.g out geom qt;(node[\"railway\"~\"^(subway_entrance|station|halt|tram_stop)$\"];node[\"station\"=\"subway\"];node[\"highway\"=\"bus_stop\"];node[\"public_transport\"=\"platform\"];nwr[\"office\"];nwr[\"shop\"];nwr[\"amenity\"~\"^(university|college|school|cafe|restaurant|fast_food|food_court|bar|pub|marketplace|cinema|theatre|arts_centre|nightclub|hospital|clinic|pharmacy|bank|post_office)$\"];nwr[\"tourism\"~\"^(attraction|museum|hotel)$\"];nwr[\"leisure\"=\"park\"];)->.p;.p out center qt;"
+ },
+ {
+  "id": "flow_4",
+  "kind": "flow",
+  "lat": 55.7425,
+  "lon": 37.601,
+  "query": "[out:json][timeout:20][bbox:55.739805,37.594617,55.745195,37.607383];way[\"highway\"~\"^(pedestrian|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|trunk)$\"]->.g;.g out geom qt;(node[\"railway\"~\"^(subway_entrance|station|halt|tram_stop)$\"];node[\"station\"=\"subway\"];node[\"highway\"=\"bus_stop\"];node[\"public_transport\"=\"platform\"];nwr[\"office\"];nwr[\"shop\"];nwr[\"amenity\"~\"^(university|college|school|cafe|restaurant|fast_food|food_court|bar|pub|marketplace|cinema|theatre|arts_centre|nightclub|hospital|clinic|pharmacy|bank|post_office)$\"];nwr[\"tourism\"~\"^(attraction|museum|hotel)$\"];nwr[\"leisure\"=\"park\"];)->.p;.p out center qt;"
+ }
+]
