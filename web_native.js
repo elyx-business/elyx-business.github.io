@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.19-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.20-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -104,9 +104,44 @@
 
   const no = (what) => J({ ok: false, error: what + " — есть в приложении для Android" });
 
+  /* «Подождите…» на сайте. В Android это рисует оболочка; в браузере расчёты идут в той же вкладке и на слабом телефоне
+     могут занять несколько секунд — без этого слоя экран выглядел зависшим. Кольцо крутится CSS-анимацией transform,
+     её браузер ведёт отдельно от расчётов, поэтому оно не замирает, пока Python считает. */
+  let busyEl = null, busyOff = 0;
+  function webBusy(on, text) {
+    if (!document.body) return;
+    if (!busyEl) {
+      const st = document.createElement("style");
+      st.textContent = "@keyframes kpb-spin{to{transform:rotate(360deg)}}"
+        + "#kp-busy{position:fixed;inset:0;z-index:2147483000;display:none;flex-direction:column;align-items:center;justify-content:center;"
+        + "gap:18px;padding:24px;background:rgba(6,8,10,.72);color:#eef2f4;font:500 16px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;"
+        + "text-align:center;touch-action:none}#kp-busy.on{display:flex}"
+        + "#kp-busy i{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.16);border-top-color:#3ccf82;"
+        + "animation:kpb-spin .8s linear infinite;will-change:transform}#kp-busy small{display:block;margin-top:4px;font-size:13px;opacity:.6}";
+      document.head.appendChild(st);
+      busyEl = document.createElement("div");
+      busyEl.id = "kp-busy";
+      busyEl.setAttribute("role", "status");
+      busyEl.setAttribute("aria-live", "polite");
+      busyEl.append(document.createElement("i"), document.createElement("div"));
+      document.body.appendChild(busyEl);
+    }
+    clearTimeout(busyOff);
+    if (on) {
+      const box = busyEl.lastChild;
+      box.textContent = String(text || "Подождите…");
+      const hint = document.createElement("small");
+      hint.textContent = "на телефоне это занимает до полуминуты";
+      box.appendChild(hint);
+      busyEl.classList.add("on");
+    } else {
+      busyOff = setTimeout(() => busyEl.classList.remove("on"), 150);   // шаги идут подряд — без мигания между ними
+    }
+  }
+
   window.KPNative = {
     appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true, demo: true }),
-    ready: () => {}, busy: () => {}, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
+    ready: () => {}, busy: (on, text) => webBusy(on, text), vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
     setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
 
     vaultList: () => {
