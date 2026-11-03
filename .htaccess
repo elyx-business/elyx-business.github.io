@@ -1,0 +1,16 @@
+AddType application/wasm .wasm
+AddType application/manifest+json .webmanifest
+AddType text/javascript .js
+Options -Indexes
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Permissions-Policy "geolocation=(self), camera=(self), microphone=()"
+</IfModule>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
