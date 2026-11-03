@@ -1067,3 +1067,40 @@ textarea#legal-paste, textarea#legal-text { width: 100%; box-sizing: border-box;
 .taxq-err { margin: 0; min-height: 0; color: var(--bad-ink); font-size: 13px; }
 .taxq-err:empty { display: none; }
 :root[data-theme="light"] .taxq { background: #eef8f2; border-color: #b9e0c8; }
+
+
+/* «Конкуренты», вариант 1: сумма → карта → за что любят соседей → что применить у себя */
+.cv-near { margin: 6px 0 0; color: var(--text-soft); font-size: 14px; }
+.cv-h1 { margin: 2px 0 12px; }
+.cv-hero { border: 1px solid #1f6b45; background: #0d2418; border-radius: 18px; padding: 16px 16px 14px; margin-bottom: 12px; }
+.cv-hero .cv-k { margin: 0; color: #7fd8a4; font-size: 14px; }
+.cv-sum { margin: 2px 0 4px; font-size: 40px; line-height: 1.1; font-weight: 800; color: #3ccf82; font-family: var(--font-num, inherit); letter-spacing: -0.01em; }
+.cv-sub { margin: 0 0 10px; color: var(--text); font-size: 13.5px; line-height: 1.35; }
+.cv-empty .cv-sub { margin: 6px 0 0; }
+.cv-bars { display: flex; flex-direction: column; gap: 8px; }
+.cv-bar { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 13.5px; }
+.cv-bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cv-track { height: 8px; border-radius: 4px; background: rgba(60, 207, 130, 0.12); overflow: hidden; }
+.cv-track i { display: block; height: 100%; border-radius: 4px; background: #3ccf82; }
+.cv-bar b { font-family: var(--font-num, inherit); white-space: nowrap; }
+.cv-map { margin-bottom: 4px; }
+.cv-list { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); margin: 8px 0 14px; }
+.cv-love { margin: 0; padding: 12px 14px; font-size: 14px; line-height: 1.4; }
+.cv-love + .cv-love { border-top: 1px solid var(--line); }
+.cv-act + .cv-act { border-top: 1px solid var(--line); }
+.cv-act.top { background: #0f1f17; }
+.cv-act > summary { display: flex; align-items: center; gap: 12px; padding: 13px 14px; list-style: none; cursor: pointer; }
+.cv-act > summary::-webkit-details-marker { display: none; }
+.cv-act .h16-ico { width: 22px; height: 22px; color: var(--text-soft); flex: none; }
+.cv-t { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.cv-t b { font-size: 15px; line-height: 1.25; }
+.cv-t small { font-size: 12.5px; color: var(--text-soft); line-height: 1.3; }
+.cv-pill { flex: none; font-weight: 700; font-size: 14px; padding: 6px 10px; border-radius: 10px; border: 1px solid #2c7a52; color: #3ccf82; background: #0d2418; white-space: nowrap; }
+.cv-pill.mute { border-color: var(--line-strong); color: var(--text-soft); background: transparent; font-weight: 600; }
+.cv-detail { margin: 0; padding: 0 14px 12px 48px; font-size: 13px; color: var(--text-soft); line-height: 1.5; }
+ul.cv-detail { padding-left: 62px; }
+:root[data-theme="light"] .cv-hero { background: #eaf7ef; border-color: #b7e0c6; }
+:root[data-theme="light"] .cv-act.top { background: #f1f9f4; }
+:root[data-theme="light"] .cv-pill { background: #eaf7ef; color: #1c8a52; border-color: #b7e0c6; }
+.taxq-row { display: flex; gap: 8px; margin: 8px 0 4px; }
+.taxq-row .taxq-in { flex: 1; min-width: 0; font-size: 16px; padding: 10px 12px; }
