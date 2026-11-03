@@ -20,6 +20,7 @@ self.addEventListener("fetch", (e) => {
     }));
     return;
   }
-  e.respondWith(fetch(e.request).then((r) => { if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone())); return r; })
+  // страницу и файлы Python — всегда сверяем с сайтом (no-cache): после обновления сайта старая страница не покажется
+  e.respondWith(fetch(e.request, { cache: "no-cache" }).then((r) => { if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone())); return r; })
     .catch(() => caches.match(e.request, { ignoreSearch: true }).then((r) => r || (e.request.mode === "navigate" ? caches.match("./") : Response.error()))));
 });
