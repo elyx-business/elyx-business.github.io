@@ -1042,3 +1042,28 @@ textarea#legal-paste, textarea#legal-text { width: 100%; box-sizing: border-box;
   border: 1px solid rgba(255,255,255,.22); background: rgba(16,17,19,.88); color: #e8eaee; font: 600 14px system-ui, sans-serif;
   white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; }
 .gm-load:disabled { opacity: .8; }
+
+/* Низ Главной: «Ещё» — «Все разделы» и «Настроим за вас» (бывшая вкладка «Под ключ») */
+.more-block { margin-top: 6px; }
+.more-list { border: 1px solid var(--line, #2a2c31); border-radius: 16px; overflow: hidden; background: var(--surface, #141518); margin-top: 8px; }
+.more-row { display: flex; align-items: center; gap: 14px; padding: 14px 14px; color: inherit; text-decoration: none; }
+.more-row + .more-row { border-top: 1px solid var(--line, #2a2c31); }
+.more-row:active { background: rgba(255, 255, 255, 0.04); }
+.more-row .h16-ico { width: 24px; height: 24px; color: var(--text-soft, #8d929c); }
+.more-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.more-t b { font-size: 15px; }
+.more-t small { font-size: 12.5px; line-height: 1.3; color: var(--text-soft, #8d929c); }
+.more-go { font-size: 22px; color: var(--text-soft, #8d929c); line-height: 1; }
+
+/* Налоги в показе клиенту: одно поле выручки вместо анкеты */
+.taxq { display: block; padding: 16px; margin: 4px 0 14px; border: 1px solid #1f5c3e; background: #0f1d16; border-radius: 18px; }
+.taxq-lede { margin: 4px 0 12px; color: var(--text); }
+.taxq-form { display: flex; flex-direction: column; gap: 12px; }
+.taxq-l { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14px; }
+.taxq-l small { font-weight: 400; color: var(--text-soft); }
+.taxq-in { width: 100%; box-sizing: border-box; font-size: 20px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--text); font-family: var(--font-num, inherit); }
+.taxq-in:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.taxq-go { font-size: 17px; padding: 14px; border-radius: 14px; }
+.taxq-err { margin: 0; min-height: 0; color: var(--bad-ink); font-size: 13px; }
+.taxq-err:empty { display: none; }
+:root[data-theme="light"] .taxq { background: #eef8f2; border-color: #b9e0c8; }
