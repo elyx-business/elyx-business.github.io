@@ -1152,3 +1152,12 @@ ul.cv-detail { padding-left: 62px; }
   animation: kpb-spin2 .8s linear infinite; flex: none; }
 @keyframes kpb-spin2 { to { transform: rotate(360deg); } }
 .flow-wait { margin: 0; color: var(--muted, #8d929c); }
+
+.contact-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 16px 18px; border-radius: 16px; background: color-mix(in srgb, var(--ok, #3ccf82) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ok, #3ccf82) 35%, transparent); }
+.contact-card .contact-t { display: grid; gap: 2px; min-width: 0; }
+.contact-card .contact-t small { color: var(--muted, #8d929c); }
+.contact-card .btn { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.gl-contact { margin: 16px 0 0; font-size: 14px; color: rgba(255,255,255,.62); text-align: center; }
+.gl-contact a { color: rgba(255,255,255,.9); text-decoration: underline; text-underline-offset: 3px; }
