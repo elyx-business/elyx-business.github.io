@@ -1218,3 +1218,14 @@ ul.cv-detail { padding-left: 62px; }
 .au-pt b { white-space: nowrap; color: var(--bad, #ff5d54); font-size: 14px; }
 .au-home .au-cap { margin-top: 6px; }
 #view > .au-home:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* красная полоска «Сеть теряет» на Главной */
+.au-strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin: 0 0 14px; padding: 12px 14px;
+  border-radius: 14px; background: #e5484d; color: #fff; text-decoration: none; box-shadow: 0 6px 22px rgba(229,72,77,.35); }
+.au-strip-t { display: grid; gap: 1px; min-width: 0; }
+.au-strip-t b { font-size: 17px; line-height: 1.25; }
+.au-strip-t small { font-size: 13px; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.au-strip-go { font-size: 24px; line-height: 1; opacity: .9; }
+.au-strip-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: au-pulse 1.6s ease-out infinite; }
+@keyframes au-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.75); } 100% { box-shadow: 0 0 0 9px rgba(255,255,255,0); } }
+@media (prefers-reduced-motion: reduce) { .au-strip-dot { animation: none; } }
