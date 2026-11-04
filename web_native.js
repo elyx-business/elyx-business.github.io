@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.28-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.29-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -140,7 +140,9 @@
   }
 
   window.KPNative = {
-    appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true, demo: true }),
+    // /app/ — рабочая версия на своих данных (вход по ИНН, ключ доступа, пароль); корень сайта — показ на примере сети
+    appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true,
+      demo: !location.pathname.startsWith("/app") }),
     ready: () => {}, busy: (on, text) => webBusy(on, text), vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
     setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
 
