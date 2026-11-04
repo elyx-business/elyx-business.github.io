@@ -1229,3 +1229,9 @@ ul.cv-detail { padding-left: 62px; }
 .au-strip-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: au-pulse 1.6s ease-out infinite; }
 @keyframes au-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.75); } 100% { box-shadow: 0 0 0 9px rgba(255,255,255,0); } }
 @media (prefers-reduced-motion: reduce) { .au-strip-dot { animation: none; } }
+.flow-when { margin: 8px 2px 0; font-size: 13px; color: var(--muted, #8d929c); }
+.au-strip-num { font-variant-numeric: tabular-nums; }
+.au-found { display: grid; gap: 2px; margin: 0 0 12px; }
+.au-found b { font-size: 20px; }
+.au-found small { color: var(--muted, #8d929c); }
+.au-strip-t small { white-space: normal; }
