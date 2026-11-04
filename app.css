@@ -1235,3 +1235,11 @@ ul.cv-detail { padding-left: 62px; }
 .au-found b { font-size: 20px; }
 .au-found small { color: var(--muted, #8d929c); }
 .au-strip-t small { white-space: normal; }
+.nw-btn { width: 100%; margin: 6px 0 10px; }
+.nw-list { display: grid; gap: 8px; max-height: 50vh; overflow: auto; }
+.nw-group { display: grid; gap: 3px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line, #26282c); }
+.nw-group.multi { border-color: color-mix(in srgb, var(--warn, #f0b13c) 55%, transparent); }
+.nw-head { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+.nw-head input[type=text] { min-width: 0; }
+.nw-group small { color: var(--muted, #8d929c); }
+.nw-k { font-size: 12px; }
