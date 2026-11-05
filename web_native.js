@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.33-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.34-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -114,7 +114,7 @@
      Рабочая версия /app/ — всегда на телефоне: данные клиента на сервер не уходят. */
   const SNAP = "1" === "1" && !location.pathname.startsWith("/app");   // показ по записи, без сервера
   const REMOTE = ("0" === "1" || SNAP) && !location.pathname.startsWith("/app");
-  const LOAD = { got: 0, total: Number("28613518") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
+  const LOAD = { got: 0, total: Number("28612969") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
   (function countDownloads() {
     if (!window.fetch || !window.ReadableStream) return;
     const orig = window.fetch;
@@ -197,7 +197,15 @@
     appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true,
       demo: !location.pathname.startsWith("/app"), remote: REMOTE, snap: SNAP }),
     ready: () => {}, busy: (on, text) => webBusy(on, text),
-    pyLoaded: () => { LOAD.done = true; if (loadEl) loadEl.textContent = "программа загружена, запускаем…"; }, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
+    pyLoaded: () => {
+      LOAD.done = true; if (loadEl) loadEl.textContent = "программа загружена, запускаем…";
+      // при первом открытии файлы Python шли мимо кэша (обработчик кэша ещё не работал) — сохраняем их сейчас,
+      // чтобы следующий вход не качал 27 МБ заново
+      try {
+        const urls = performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.startsWith(location.origin + "/py/"));
+        if (urls.length && navigator.serviceWorker) navigator.serviceWorker.ready.then((r) => r.active && r.active.postMessage({ keep: urls })).catch(() => {});
+      } catch { /* без кэша — просто скачается ещё раз */ }
+    }, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
     setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
 
     vaultList: () => {
@@ -305,5 +313,5 @@
     ownerKeyImport: () => no("Ключ владельца"), ownerKeyRemove: () => J({ ok: true }), ownerSign: () => no("Подпись ключом владельца"),
   };
 
-  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {}));
 })();
