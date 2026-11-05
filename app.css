@@ -1243,3 +1243,9 @@ ul.cv-detail { padding-left: 62px; }
 .nw-head input[type=text] { min-width: 0; }
 .nw-group small { color: var(--muted, #8d929c); }
 .nw-k { font-size: 12px; }
+
+/* «Тихий аудит»: признаки (не доказательство) — жёлтые, суммы в «Найдено» не входят */
+.au-alert.sig { background: color-mix(in srgb, var(--warn, #f2b136) 8%, transparent); border-color: color-mix(in srgb, var(--warn, #f2b136) 38%, transparent); }
+.au-alert.sig .au-ico { color: var(--warn, #f2b136); background: color-mix(in srgb, var(--warn, #f2b136) 16%, transparent); }
+.au-pill.sig { color: var(--warn, #f2b136); border-color: color-mix(in srgb, var(--warn, #f2b136) 45%, transparent); }
+.au-sig-head { margin: 18px 0 4px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--warn, #f2b136); }
