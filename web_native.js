@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.31-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.32-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -110,7 +110,11 @@
   /* Счётчик загрузки файлов программы. Первый запуск — это десятки мегабайт (Python в браузере), и по мобильному
      интернету он может идти минутами. Без цифр экран выглядит зависшим, поэтому считаем скачанное и показываем «X из Y МБ».
      Ответ сети не подменяем: читаем копию (clone), оригинал уходит в Pyodide нетронутым. */
-  const LOAD = { got: 0, total: Number("28605525") || 0, done: false };   // размер файлов Python подставляет сборка
+  /* Показ на своём сервере: программа считает на сервере, браузер Python не загружает (сборка ставит "1").
+     Рабочая версия /app/ — всегда на телефоне: данные клиента на сервер не уходят. */
+  const SNAP = "1" === "1" && !location.pathname.startsWith("/app");   // показ по записи, без сервера
+  const REMOTE = ("0" === "1" || SNAP) && !location.pathname.startsWith("/app");
+  const LOAD = { got: 0, total: Number("28612951") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
   (function countDownloads() {
     if (!window.fetch || !window.ReadableStream) return;
     const orig = window.fetch;
@@ -139,7 +143,7 @@
     if (loadBar) loadBar.style.width = (k * 100).toFixed(1) + "%";
   }
 
-  let busyEl = null, busyOff = 0;
+  let busyEl = null, busyOff = 0, busyShow = 0;
   function webBusy(on, text) {
     if (!document.body) return;
     if (!busyEl) {
@@ -151,6 +155,7 @@
         + "#kp-busy i{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.16);border-top-color:#3ccf82;"
         + "animation:kpb-spin .8s linear infinite;will-change:transform}#kp-busy small{display:block;margin-top:8px;font-size:13px;opacity:.6}"
         + "#kp-busy u{display:block;width:min(260px,70vw);height:4px;margin:10px auto 0;border-radius:3px;background:rgba(255,255,255,.14)}"
+        + "#kp-busy.quiet{background:transparent}#kp-busy.quiet>*{visibility:hidden}"
         + "#kp-busy u b{display:block;height:100%;width:0;border-radius:3px;background:#3ccf82;transition:width .3s ease}";
       document.head.appendChild(st);
       busyEl = document.createElement("div");
@@ -161,12 +166,13 @@
       document.body.appendChild(busyEl);
     }
     clearTimeout(busyOff);
+    clearTimeout(busyShow);
     if (on) {
       const box = busyEl.lastChild;
       const loading = LOAD.total && !LOAD.done;
       box.textContent = loading ? "Загружаем программу" : String(text || "Подождите…");
       const hint = document.createElement("small");
-      hint.textContent = loading ? "загружено 0 МБ" : "на телефоне это занимает до полуминуты";
+      hint.textContent = loading ? "загружено 0 МБ" : REMOTE ? "" : "на телефоне это занимает до полуминуты";
       box.appendChild(hint);
       loadEl = loading ? hint : null;
       loadBar = null;
@@ -176,15 +182,20 @@
         paintLoad();
       }
       busyEl.classList.add("on");
+      // на сервере ответ приходит быстро: слой сразу не даёт нажать дважды, но кольцо видно только если ждать дольше секунды
+      if (REMOTE && !busyEl.classList.contains("shown")) {
+        busyEl.classList.add("quiet");
+        busyShow = setTimeout(() => { busyEl.classList.remove("quiet"); busyEl.classList.add("shown"); }, 1000);
+      }
     } else {
-      busyOff = setTimeout(() => busyEl.classList.remove("on"), 150);   // шаги идут подряд — без мигания между ними
+      busyOff = setTimeout(() => busyEl.classList.remove("on", "quiet", "shown"), 150);   // шаги идут подряд — без мигания между ними
     }
   }
 
   window.KPNative = {
     // /app/ — рабочая версия на своих данных (вход по ИНН, ключ доступа, пароль); корень сайта — показ на примере сети
     appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true,
-      demo: !location.pathname.startsWith("/app") }),
+      demo: !location.pathname.startsWith("/app"), remote: REMOTE, snap: SNAP }),
     ready: () => {}, busy: (on, text) => webBusy(on, text),
     pyLoaded: () => { LOAD.done = true; if (loadEl) loadEl.textContent = "программа загружена, запускаем…"; }, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
     setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
