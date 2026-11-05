@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.30-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.31-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -107,6 +107,38 @@
   /* «Подождите…» на сайте. В Android это рисует оболочка; в браузере расчёты идут в той же вкладке и на слабом телефоне
      могут занять несколько секунд — без этого слоя экран выглядел зависшим. Кольцо крутится CSS-анимацией transform,
      её браузер ведёт отдельно от расчётов, поэтому оно не замирает, пока Python считает. */
+  /* Счётчик загрузки файлов программы. Первый запуск — это десятки мегабайт (Python в браузере), и по мобильному
+     интернету он может идти минутами. Без цифр экран выглядит зависшим, поэтому считаем скачанное и показываем «X из Y МБ».
+     Ответ сети не подменяем: читаем копию (clone), оригинал уходит в Pyodide нетронутым. */
+  const LOAD = { got: 0, total: Number("28605525") || 0, done: false };   // размер файлов Python подставляет сборка
+  (function countDownloads() {
+    if (!window.fetch || !window.ReadableStream) return;
+    const orig = window.fetch;
+    window.fetch = function (input, init) {
+      // Pyodide передаёт адрес объектом URL, а не строкой: String(URL) даёт полный адрес; у Request — поле url
+      const url = String(input && typeof input === "object" && "url" in input ? input.url : input || "");
+      const p = orig.apply(this, arguments);
+      if (!/\/py\//.test(url) || LOAD.done) return p;
+      p.then((res) => {
+        try {
+          const rd = res.clone().body.getReader();
+          const pump = () => rd.read().then((r) => { if (r.done) return; LOAD.got += r.value.byteLength; paintLoad(); pump(); }).catch(() => {});
+          pump();
+        } catch { /* копия недоступна — просто не показываем цифры */ }
+      }).catch(() => {});
+      return p;
+    };
+  })();
+  const mb = (n) => (n / 1048576).toFixed(n < 10485760 ? 1 : 0);
+  let loadEl = null, loadBar = null;
+  function paintLoad() {
+    if (!loadEl || !LOAD.total) return;
+    const k = Math.min(1, LOAD.got / LOAD.total);
+    loadEl.textContent = k >= 0.995 ? "программа загружена, запускаем…"
+      : `загружено ${mb(LOAD.got)} из ${mb(LOAD.total)} МБ · только при первом запуске`;
+    if (loadBar) loadBar.style.width = (k * 100).toFixed(1) + "%";
+  }
+
   let busyEl = null, busyOff = 0;
   function webBusy(on, text) {
     if (!document.body) return;
@@ -117,7 +149,9 @@
         + "gap:18px;padding:24px;background:rgba(6,8,10,.72);color:#eef2f4;font:500 16px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;"
         + "text-align:center;touch-action:none}#kp-busy.on{display:flex}"
         + "#kp-busy i{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.16);border-top-color:#3ccf82;"
-        + "animation:kpb-spin .8s linear infinite;will-change:transform}#kp-busy small{display:block;margin-top:4px;font-size:13px;opacity:.6}";
+        + "animation:kpb-spin .8s linear infinite;will-change:transform}#kp-busy small{display:block;margin-top:8px;font-size:13px;opacity:.6}"
+        + "#kp-busy u{display:block;width:min(260px,70vw);height:4px;margin:10px auto 0;border-radius:3px;background:rgba(255,255,255,.14)}"
+        + "#kp-busy u b{display:block;height:100%;width:0;border-radius:3px;background:#3ccf82;transition:width .3s ease}";
       document.head.appendChild(st);
       busyEl = document.createElement("div");
       busyEl.id = "kp-busy";
@@ -129,10 +163,18 @@
     clearTimeout(busyOff);
     if (on) {
       const box = busyEl.lastChild;
-      box.textContent = String(text || "Подождите…");
+      const loading = LOAD.total && !LOAD.done;
+      box.textContent = loading ? "Загружаем программу" : String(text || "Подождите…");
       const hint = document.createElement("small");
-      hint.textContent = "на телефоне это занимает до полуминуты";
+      hint.textContent = loading ? "загружено 0 МБ" : "на телефоне это занимает до полуминуты";
       box.appendChild(hint);
+      loadEl = loading ? hint : null;
+      loadBar = null;
+      if (loading) {
+        const bar = document.createElement("u"); bar.appendChild(document.createElement("b"));
+        box.appendChild(bar); loadBar = bar.firstChild;
+        paintLoad();
+      }
       busyEl.classList.add("on");
     } else {
       busyOff = setTimeout(() => busyEl.classList.remove("on"), 150);   // шаги идут подряд — без мигания между ними
@@ -143,7 +185,8 @@
     // /app/ — рабочая версия на своих данных (вход по ИНН, ключ доступа, пароль); корень сайта — показ на примере сети
     appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true,
       demo: !location.pathname.startsWith("/app") }),
-    ready: () => {}, busy: (on, text) => webBusy(on, text), vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
+    ready: () => {}, busy: (on, text) => webBusy(on, text),
+    pyLoaded: () => { LOAD.done = true; if (loadEl) loadEl.textContent = "программа загружена, запускаем…"; }, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
     setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
 
     vaultList: () => {
