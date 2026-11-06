@@ -1249,3 +1249,8 @@ ul.cv-detail { padding-left: 62px; }
 .au-alert.sig .au-ico { color: var(--warn, #f2b136); background: color-mix(in srgb, var(--warn, #f2b136) 16%, transparent); }
 .au-pill.sig { color: var(--warn, #f2b136); border-color: color-mix(in srgb, var(--warn, #f2b136) 45%, transparent); }
 .au-sig-head { margin: 18px 0 4px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--warn, #f2b136); }
+/* «Тихий аудит»: возможности — где заработать больше (не потери) */
+.au-alert.opp { background: color-mix(in srgb, var(--ok, #3ccf82) 8%, transparent); border-color: color-mix(in srgb, var(--ok, #3ccf82) 36%, transparent); }
+.au-alert.opp .au-ico { color: var(--ok, #3ccf82); background: color-mix(in srgb, var(--ok, #3ccf82) 16%, transparent); }
+.au-pill.opp { color: var(--ok, #3ccf82); border-color: color-mix(in srgb, var(--ok, #3ccf82) 45%, transparent); }
+.au-opp-head { margin: 18px 0 4px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ok, #3ccf82); }

@@ -17,7 +17,7 @@
     "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
     "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
   const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
-  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.36-web";
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.37-web";
   const META = "elyx-vault-meta", LAST = "elyx-last";
   const enc = new TextEncoder(), dec = new TextDecoder();
   const J = (o) => JSON.stringify(o);
@@ -114,7 +114,7 @@
      Рабочая версия /app/ — всегда на телефоне: данные клиента на сервер не уходят. */
   const SNAP = "1" === "1" && !location.pathname.startsWith("/app");   // показ по записи, без сервера
   const REMOTE = ("0" === "1" || SNAP) && !location.pathname.startsWith("/app");
-  const LOAD = { got: 0, total: Number("28633426") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
+  const LOAD = { got: 0, total: Number("28637639") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
   (function countDownloads() {
     if (!window.fetch || !window.ReadableStream) return;
     const orig = window.fetch;
