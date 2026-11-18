@@ -1254,3 +1254,22 @@ ul.cv-detail { padding-left: 62px; }
 .au-alert.opp .au-ico { color: var(--ok, #3ccf82); background: color-mix(in srgb, var(--ok, #3ccf82) 16%, transparent); }
 .au-pill.opp { color: var(--ok, #3ccf82); border-color: color-mix(in srgb, var(--ok, #3ccf82) 45%, transparent); }
 .au-opp-head { margin: 18px 0 4px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ok, #3ccf82); }
+
+/* 2.9.38 — плавающий нижний бар: серые иконки, открытая вкладка — зелёная таблетка с подписью */
+.tabs-bottom { left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); padding: 6px;
+  border: 1px solid #2c2f34; border-radius: 30px; background: rgba(28, 30, 34, .92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45); }
+:root[data-theme="light"] .tabs-bottom { background: rgba(255, 255, 255, .94); border-color: #e2e4e8; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); }
+.tabs-bottom .tabs-top { display: flex; align-items: center; justify-content: space-between; gap: 2px; padding: 0; }
+.tabs-bottom .tab-top, .tabs-bottom .tab-top[data-tab], .tabs-bottom .tab-top[data-tab].main { flex: 0 0 auto; flex-direction: row; gap: 7px;
+  height: 46px; min-width: 46px; padding: 0 12px; border-radius: 23px; justify-content: center; color: var(--text-mute); font-weight: 500;
+  transition: background .2s, color .2s; }
+.tabs-bottom .tab-top .tab-label { display: none; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+.tabs-bottom .tab-top.on, .tabs-bottom .tab-top[data-tab].on, .tabs-bottom .tab-top[data-tab].main.on { flex: 0 1 auto; min-width: 0; background: #16301f; color: #5fdc93; }
+:root[data-theme="light"] .tabs-bottom .tab-top.on { background: #e3f5ea; color: #137a40; }
+.tabs-bottom .tab-top.on .tab-label { display: inline; }
+.tabs-bottom .tab-top::after, .tabs-bottom .tab-top.on::after { display: none; }
+.tabs-bottom .tab-top .tab-ico, .tabs-bottom .tab-top.main .tab-ico, .tabs-bottom .tab-top[data-tab].main .tab-ico,
+.tabs-bottom .tab-top[data-tab].main.on .tab-ico { width: 24px; height: 24px; margin: 0; background: none; box-shadow: none; color: inherit; }
+.tabs-bottom .tab-top .tab-ico svg, .tabs-bottom .tab-top.main .tab-ico svg { width: 22px; height: 22px; }
+body.has-tabs main#view { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
