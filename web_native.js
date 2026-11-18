@@ -1,0 +1,317 @@
+/* Elyx для iPhone (сайт, который ставится «На экран Домой»): оболочка вместо Android.
+   Защита:
+   • База бизнеса шифруется AES-256-GCM. Ключ выводится из пароля через PBKDF2-SHA-256, 600 000 повторов,
+     у каждого профиля своя соль, у каждого сохранения новый вектор. Ключ «неизвлекаемый»: даже код страницы
+     не может его прочитать, только шифровать им.
+   • Зашифрованная база лежит только в памяти этого iPhone (IndexedDB сайта). На сервер сайта ничего не уходит:
+     сервер раздаёт только файлы программы.
+   • Неверный пароль 5 раз — пауза 30 с, дальше пауза удваивается (перебор пароля становится бесполезен).
+   • Свернули сайт больше чем на 5 минут — он закрывается и забывает ключ, нужен пароль заново.
+   • В интернет программа ходит только по HTTPS и только к списку сервисов, как в Android. */
+(() => {
+  "use strict";
+  if (window.top !== window.self) { document.documentElement.innerHTML = ""; return; }   // не даём встроить сайт в чужую страницу
+
+  const ALLOWED = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "overpass-api.de", "maps.mail.ru", "overpass.private.coffee",
+    "nominatim.openstreetmap.org", "photon.komoot.io", "search-maps.yandex.ru", "static-maps.yandex.ru",
+    "ofv-api-v0-1-1.evotor.ru", "universal-api.1-ofd.ru", "llm.api.cloud.yandex.net", "ai.api.cloud.yandex.net",
+    "suggestions.dadata.ru", "api-seller.ozon.ru", "platform-api2.max.ru", "raw.githubusercontent.com", "api.met.no"];
+  const NO_BROWSER = ["egrul.nalog.ru", "bo.nalog.ru", "bo.nalog.gov.ru", "raw.githubusercontent.com"];
+  const ITER = 600000, LOCK_MIN = 5, VERSION = "2.9.37-web";
+  const META = "elyx-vault-meta", LAST = "elyx-last";
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const J = (o) => JSON.stringify(o);
+  const cb = (id, data) => setTimeout(() => window.KPNativeCallback && window.KPNativeCallback(id, J(data)), 0);
+  const b64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+  const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  // ---------- хранилище: метаданные (без секретов) — localStorage, шифротекст — IndexedDB
+  const meta = () => { try { return JSON.parse(localStorage.getItem(META)) || {}; } catch { return {}; } };
+  const setMeta = (m) => { try { localStorage.setItem(META, J(m)); } catch { /* приватный режим */ } };
+  const idb = () => new Promise((res, rej) => {
+    const r = indexedDB.open("elyx-vault", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("db");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const idbDo = async (mode, fn) => {
+    const d = await idb();
+    return new Promise((res, rej) => {
+      const t = d.transaction("db", mode), r = fn(t.objectStore("db"));
+      t.oncomplete = () => res(r && r.result);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch { /* не страшно */ }
+
+  // ---------- шифрование
+  const derive = async (pass, salt) => {
+    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: ITER, hash: "SHA-256" }, base,
+      { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  };
+  const seal = async (key, inn, text) => {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(inn) }, key, enc.encode(text)));
+    return { iv: b64(iv), ct };
+  };
+
+  let session = null;          // { inn, key, pass } — только в памяти вкладки
+  let writing = Promise.resolve();
+  const doPersist = async (db) => {        // вызывается только внутри очереди writing
+    const s = session;
+    if (!s || !s.key) return;
+    const { iv, ct } = await seal(s.key, s.inn, db);
+    await idbDo("readwrite", (st) => st.put(ct, s.inn));
+    const m = meta(); if (m[s.inn]) { m[s.inn].iv = iv; setMeta(m); }
+  };
+  const queue = (fn) => { writing = writing.then(fn).catch((e) => console.warn("Elyx: не удалось сохранить", e)); return writing; };
+  const persist = (db) => queue(() => doPersist(db));
+
+  // ---------- автоблокировка
+  let hiddenAt = 0;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (session && hiddenAt && Date.now() - hiddenAt > LOCK_MIN * 60000) { session = null; writing.finally(() => location.reload()); }
+  });
+
+  // ---------- сеть: только HTTPS к разрешённым сервисам
+  const FORBIDDEN = /^(user-agent|host|content-length|connection|cookie|origin|referer|accept-encoding)$/i;
+  function http(reqJson) {
+    let req;
+    try { req = JSON.parse(reqJson); } catch { return J({ error: "неверный запрос" }); }
+    let u;
+    try { u = new URL(req.url); } catch { return J({ error: "неверный адрес" }); }
+    if (u.protocol !== "https:" || !ALLOWED.includes(u.hostname)) return J({ error: "Адрес не разрешён: " + u.hostname });
+    // Налоговая не отвечает браузерам с чужих сайтов, а запрос здесь синхронный: ожидание её ответа замораживало
+    // весь сайт после ввода ИНН. Поэтому из браузера к ней не ходим вовсе: компания показывается по ИНН сразу.
+    if (NO_BROWSER.includes(u.hostname)) return J({ error: `Сервис ${u.hostname} не пускает запросы из браузера. Эта функция работает в приложении для Android.` });
+    const x = new XMLHttpRequest();
+    try {
+      x.open(req.method || "GET", u.href, false);
+      x.overrideMimeType("text/plain; charset=x-user-defined");
+      for (const [k, v] of Object.entries(req.headers || {})) if (!FORBIDDEN.test(k)) x.setRequestHeader(k, v);
+      x.send(req.body ? unb64(req.body) : null);
+    } catch {
+      return J({ error: `Сервис ${u.hostname} не пускает запросы из браузера iPhone. Эта функция работает в приложении для Android.` });
+    }
+    if (!x.status) return J({ error: `Нет ответа от ${u.hostname}: проверьте интернет. Если не поможет — сервис закрыт для браузера, функция есть в приложении для Android.` });
+    const raw = x.responseText, out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i) & 0xff;
+    const headers = x.getAllResponseHeaders().trim().split(/\r?\n/).filter(Boolean).map((l) => { const i = l.indexOf(":"); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+    return J({ status: x.status, headers, body: b64(out) });
+  }
+
+  const no = (what) => J({ ok: false, error: what + " — есть в приложении для Android" });
+
+  /* «Подождите…» на сайте. В Android это рисует оболочка; в браузере расчёты идут в той же вкладке и на слабом телефоне
+     могут занять несколько секунд — без этого слоя экран выглядел зависшим. Кольцо крутится CSS-анимацией transform,
+     её браузер ведёт отдельно от расчётов, поэтому оно не замирает, пока Python считает. */
+  /* Счётчик загрузки файлов программы. Первый запуск — это десятки мегабайт (Python в браузере), и по мобильному
+     интернету он может идти минутами. Без цифр экран выглядит зависшим, поэтому считаем скачанное и показываем «X из Y МБ».
+     Ответ сети не подменяем: читаем копию (clone), оригинал уходит в Pyodide нетронутым. */
+  /* Показ на своём сервере: программа считает на сервере, браузер Python не загружает (сборка ставит "1").
+     Рабочая версия /app/ — всегда на телефоне: данные клиента на сервер не уходят. */
+  const SNAP = "1" === "1" && !location.pathname.startsWith("/app");   // показ по записи, без сервера
+  const REMOTE = ("0" === "1" || SNAP) && !location.pathname.startsWith("/app");
+  const LOAD = { got: 0, total: Number("28637639") || 0, done: REMOTE };   // размер файлов Python подставляет сборка
+  (function countDownloads() {
+    if (!window.fetch || !window.ReadableStream) return;
+    const orig = window.fetch;
+    window.fetch = function (input, init) {
+      // Pyodide передаёт адрес объектом URL, а не строкой: String(URL) даёт полный адрес; у Request — поле url
+      const url = String(input && typeof input === "object" && "url" in input ? input.url : input || "");
+      const p = orig.apply(this, arguments);
+      if (!/\/py\//.test(url) || LOAD.done) return p;
+      p.then((res) => {
+        try {
+          const rd = res.clone().body.getReader();
+          const pump = () => rd.read().then((r) => { if (r.done) return; LOAD.got += r.value.byteLength; paintLoad(); pump(); }).catch(() => {});
+          pump();
+        } catch { /* копия недоступна — просто не показываем цифры */ }
+      }).catch(() => {});
+      return p;
+    };
+  })();
+  const mb = (n) => (n / 1048576).toFixed(n < 10485760 ? 1 : 0);
+  let loadEl = null, loadBar = null;
+  function paintLoad() {
+    if (!loadEl || !LOAD.total) return;
+    const k = Math.min(1, LOAD.got / LOAD.total);
+    loadEl.textContent = k >= 0.995 ? "программа загружена, запускаем…"
+      : `загружено ${mb(LOAD.got)} из ${mb(LOAD.total)} МБ · только при первом запуске`;
+    if (loadBar) loadBar.style.width = (k * 100).toFixed(1) + "%";
+  }
+
+  let busyEl = null, busyOff = 0, busyShow = 0;
+  function webBusy(on, text) {
+    if (!document.body) return;
+    if (!busyEl) {
+      const st = document.createElement("style");
+      st.textContent = "@keyframes kpb-spin{to{transform:rotate(360deg)}}"
+        + "#kp-busy{position:fixed;inset:0;z-index:2147483000;display:none;flex-direction:column;align-items:center;justify-content:center;"
+        + "gap:18px;padding:24px;background:rgba(6,8,10,.72);color:#eef2f4;font:500 16px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;"
+        + "text-align:center;touch-action:none}#kp-busy.on{display:flex}"
+        + "#kp-busy i{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.16);border-top-color:#3ccf82;"
+        + "animation:kpb-spin .8s linear infinite;will-change:transform}#kp-busy small{display:block;margin-top:8px;font-size:13px;opacity:.6}"
+        + "#kp-busy u{display:block;width:min(260px,70vw);height:4px;margin:10px auto 0;border-radius:3px;background:rgba(255,255,255,.14)}"
+        + "#kp-busy.quiet{background:transparent}#kp-busy.quiet>*{visibility:hidden}"
+        + "#kp-busy u b{display:block;height:100%;width:0;border-radius:3px;background:#3ccf82;transition:width .3s ease}";
+      document.head.appendChild(st);
+      busyEl = document.createElement("div");
+      busyEl.id = "kp-busy";
+      busyEl.setAttribute("role", "status");
+      busyEl.setAttribute("aria-live", "polite");
+      busyEl.append(document.createElement("i"), document.createElement("div"));
+      document.body.appendChild(busyEl);
+    }
+    clearTimeout(busyOff);
+    clearTimeout(busyShow);
+    if (on) {
+      const box = busyEl.lastChild;
+      const loading = LOAD.total && !LOAD.done;
+      box.textContent = loading ? "Загружаем программу" : String(text || "Подождите…");
+      const hint = document.createElement("small");
+      hint.textContent = loading ? "загружено 0 МБ" : REMOTE ? "" : "на телефоне это занимает до полуминуты";
+      box.appendChild(hint);
+      loadEl = loading ? hint : null;
+      loadBar = null;
+      if (loading) {
+        const bar = document.createElement("u"); bar.appendChild(document.createElement("b"));
+        box.appendChild(bar); loadBar = bar.firstChild;
+        paintLoad();
+      }
+      busyEl.classList.add("on");
+      // на сервере ответ приходит быстро: слой сразу не даёт нажать дважды, но кольцо видно только если ждать дольше секунды
+      if (REMOTE && !busyEl.classList.contains("shown")) {
+        busyEl.classList.add("quiet");
+        busyShow = setTimeout(() => { busyEl.classList.remove("quiet"); busyEl.classList.add("shown"); }, 1000);
+      }
+    } else {
+      busyOff = setTimeout(() => busyEl.classList.remove("on", "quiet", "shown"), 150);   // шаги идут подряд — без мигания между ними
+    }
+  }
+
+  window.KPNative = {
+    // /app/ — рабочая версия на своих данных (вход по ИНН, ключ доступа, пароль); корень сайта — показ на примере сети
+    appInfo: () => J({ version: VERSION, biometric: "none", verifyUrl: "", secureScreen: false, autoLock: LOCK_MIN, bioOn: false, updates: false, web: true,
+      demo: !location.pathname.startsWith("/app"), remote: REMOTE, snap: SNAP }),
+    ready: () => {}, busy: (on, text) => webBusy(on, text),
+    pyLoaded: () => {
+      LOAD.done = true; if (loadEl) loadEl.textContent = "программа загружена, запускаем…";
+      // при первом открытии файлы Python шли мимо кэша (обработчик кэша ещё не работал) — сохраняем их сейчас,
+      // чтобы следующий вход не качал 27 МБ заново
+      try {
+        const urls = performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.startsWith(location.origin + "/py/"));
+        if (urls.length && navigator.serviceWorker) navigator.serviceWorker.ready.then((r) => r.active && r.active.postMessage({ keep: urls })).catch(() => {});
+      } catch { /* без кэша — просто скачается ещё раз */ }
+    }, vibrate: () => {}, schedule: () => {}, toast: () => J({ ok: true }),
+    setSecureScreen: () => J({ ok: true }), setAutoLock: () => J({ ok: true }),
+
+    vaultList: () => {
+      const m = meta();
+      return J({ profiles: Object.values(m).map((p) => ({ inn: p.inn, bio: false, name: p.name, keys: p.keys || "" })),
+        last: localStorage.getItem(LAST) || "" });
+    },
+    vaultCreate: (inn, pass, db, metaJson) => {
+      const m = meta();
+      let name = "";
+      try { name = String(JSON.parse(metaJson).name || "").slice(0, 80); } catch { /* без имени */ }
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      m[inn] = { inn, name, salt: b64(salt), iv: "", keys: "", fails: 0, until: 0 };
+      setMeta(m);
+      try { localStorage.setItem(LAST, inn); } catch { /* ок */ }
+      session = { inn, key: null, pass };
+      queue(async () => { session = { inn, key: await derive(pass, salt), pass }; await doPersist(db); });
+      return J({ ok: true });
+    },
+    vaultOpenAsync: (inn, pass, id) => {
+      (async () => {
+        await writing;                       // сначала дописываем то, что ещё сохраняется
+        const m = meta(), p = m[inn];
+        if (!p) return cb(id, { ok: false, error: "На этом iPhone нет входа для этого ИНН. Зарегистрируйтесь." });
+        if (p.until > Date.now()) return cb(id, { ok: false, error: `Слишком много попыток. Подождите ${Math.ceil((p.until - Date.now()) / 1000)} с.` });
+        const ct = await idbDo("readonly", (st) => st.get(inn));
+        if (!ct || !p.iv) return cb(id, { ok: false, error: "База этого профиля не найдена на iPhone" });
+        const key = await derive(pass, unb64(p.salt));
+        try {
+          const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(p.iv), additionalData: enc.encode(inn) }, key, ct);
+          p.fails = 0; p.until = 0; setMeta(m);
+          localStorage.setItem(LAST, inn);
+          session = { inn, key, pass };
+          cb(id, { ok: true, db: dec.decode(plain) });
+        } catch {
+          p.fails = (p.fails || 0) + 1;
+          if (p.fails >= 5) p.until = Date.now() + 30000 * 2 ** (p.fails - 5);
+          setMeta(m);
+          cb(id, { ok: false, error: p.fails >= 5 ? "Неверный пароль. Вход на паузе — подождите." : `Неверный пароль. Осталось попыток до паузы: ${5 - p.fails}` });
+        }
+      })().catch(() => cb(id, { ok: false, error: "Не удалось открыть базу" }));
+    },
+    vaultOpen: () => no("Вход без ожидания"),
+    vaultSave: (db) => { if (!session) return J({ ok: false, error: "закрыто" }); persist(db); return J({ ok: true }); },
+    vaultLock: () => { session = null; return J({ ok: true }); },
+    vaultSetKeys: (keys) => { if (!session) return J({ ok: false, error: "закрыто" }); const m = meta(); if (m[session.inn]) { m[session.inn].keys = keys; setMeta(m); } return J({ ok: true }); },
+    vaultChangePassword: (oldp, newp) => {
+      if (!session || session.pass !== oldp) return J({ ok: false, error: "Неверный текущий пароль" });
+      const s = session, m = meta(), salt = crypto.getRandomValues(new Uint8Array(16));
+      queue(async () => {
+        const old = await idbDo("readonly", (st) => st.get(s.inn));
+        const plain = dec.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(meta()[s.inn].iv), additionalData: enc.encode(s.inn) }, s.key, old));
+        const key = await derive(newp, salt);
+        m[s.inn].salt = b64(salt); setMeta(m);
+        session = { inn: s.inn, key, pass: newp };
+        await doPersist(plain);
+      });
+      return J({ ok: true });
+    },
+    vaultDelete: (pass) => {
+      if (!session || session.pass !== pass) return J({ ok: false, error: "Неверный пароль" });
+      const inn = session.inn, m = meta();
+      delete m[inn]; setMeta(m); session = null;
+      queue(() => idbDo("readwrite", (st) => st.delete(inn)));
+      return J({ ok: true });
+    },
+    vaultTake: () => no("Вход по отпечатку"),
+    bioOpen: (inn, id) => cb(id, { ok: false, error: "На iPhone вход по паролю" }),
+    bioEnable: (id) => cb(id, { ok: false, error: "На iPhone вход по паролю" }),
+    bioDisable: () => J({ ok: true }),
+
+    http,
+    lanGet: () => J({ error: "Камеры в Wi-Fi кофейни подключаются в приложении для Android" }),
+    locate: (id) => {
+      if (!navigator.geolocation) return cb(id, { ok: false, error: "Геолокация недоступна" });
+      navigator.geolocation.getCurrentPosition((p) => cb(id, { ok: true, lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy }),
+        () => cb(id, { ok: false, error: "Разрешите сайту доступ к геопозиции: Настройки → Safari → Геопозиция" }), { enableHighAccuracy: true, timeout: 15000 });
+    },
+    saveFile: (name, mime, data) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([unb64(data)], { type: mime }));
+      a.download = name; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+      return J({ ok: true });
+    },
+    takePhoto: (id) => {
+      const i = document.createElement("input");
+      i.type = "file"; i.accept = "image/*"; i.capture = "environment";
+      i.onchange = () => {
+        const f = i.files && i.files[0];
+        if (!f) return cb(id, { ok: false, error: "Фото не выбрано" });
+        const r = new FileReader();
+        r.onload = () => cb(id, { ok: true, mime: f.type || "image/jpeg", b64: String(r.result).split(",")[1] });
+        r.readAsDataURL(f);
+      };
+      i.click();
+    },
+    copyText: (t) => { try { navigator.clipboard.writeText(String(t)); return J({ ok: true }); } catch { return J({ ok: false, error: "Не удалось скопировать" }); } },
+    openExternal: (url) => { try { const u = new URL(url); if (u.protocol === "https:" || u.protocol === "tel:" || u.protocol === "mailto:") window.open(u.href, "_blank", "noopener"); } catch { /* неверная ссылка */ } return J({ ok: true }); },
+    notify: () => J({ ok: true }),
+    updateCheck: (id) => cb(id, { ok: true, available: false, current: VERSION }),
+    updateNeedsPermission: () => J({ ok: true, need: false }),
+    updateInstall: (id) => cb(id, { ok: true }),
+    ownerKeyStatus: () => J({ ok: true, present: false }),
+    ownerKeyImport: () => no("Ключ владельца"), ownerKeyRemove: () => J({ ok: true }), ownerSign: () => no("Подпись ключом владельца"),
+  };
+
+  if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {}));
+})();

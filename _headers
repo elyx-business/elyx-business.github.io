@@ -1,0 +1,13 @@
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), interest-cohort=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://egrul.nalog.ru https://bo.nalog.ru https://bo.nalog.gov.ru https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://nominatim.openstreetmap.org https://photon.komoot.io https://search-maps.yandex.ru https://static-maps.yandex.ru https://ofv-api-v0-1-1.evotor.ru https://universal-api.1-ofd.ru https://llm.api.cloud.yandex.net https://ai.api.cloud.yandex.net https://suggestions.dadata.ru https://api-seller.ozon.ru https://platform-api2.max.ru https://raw.githubusercontent.com https://api.met.no; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+/sw.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
